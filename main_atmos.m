@@ -1,6 +1,7 @@
 % Oil spill v.Struct
 % Lagrangian algorithm to simulate oil spills in the Gulf of Mexico
 close all; clear; clc; format compact; clc
+
 %----------------------- Spill timing (yyyy,mm,dd) -----------------------%
 spillTiming.startDay_date     = [2010,04,22]; % [2010,04,22]
 spillTiming.lastSpillDay_date = [2010,07,24]; % [2010,07,14]
@@ -11,13 +12,13 @@ spillLocation.Lon      = -88.366; % -88.366
 spillLocation.Depths   = [1100, 400,    0];
 spillLocation.Radius_m = [ 250, 500, 1000]; % 2 STD for random initialization of particles
 %------------------------- Local Paths filename --------------------------%
-Params.LocalPaths = 'local_paths_BP_50p1.m';
+Params.LocalPaths = 'local_paths_atm.m';
 %--------------------------- Output directorie ---------------------------%
-Params.OutputDir = '/DATA/corridasjulio/';
+Params.OutputDir = '/home/andrea/matlabcode/outputsAtm/';
 %----------------------- Runge-Kutta method: 2 | 4 -----------------------%
 Params.RungeKutta = 4;
-%------------- Velocity Fields Type: 1 (BP) | 2 (Usumacinta) -------------%
-Params.velocityFieldsType = 1;
+%------------- Velocity Fields Type: 1 (BP) | 2 (Usumacinta)| 3 (Atmosphere) -------------%
+Params.velocityFieldsType = 3;
 %----------------------------- Model domain ------------------------------%
 Params.domainLimits = [-92, -80, 25, 31]; % [-88.6, -88.2, 28.71, 28.765]
 %------------- Number of particles representing one barrel ---------------%
@@ -33,9 +34,8 @@ Params.components_proportions = [...
   [0.05 0.05 0.05 0.05 0.10 0.20 0.20 0.30];
   [0.05 0.05 0.10 0.10 0.10 0.20 0.20 0.20];
   [0.05 0.20 0.30 0.20 0.10 0.05 0.05 0.05]];
-%--------------- Ocean and Wind files (time step in hours) ---------------%
-OceanFile.timeStep_hrs = 24;
-WindFile.timeStep_hrs  = 6;
+%----------- Wind files (time step in hours) -----------------------------%
+WindFile.timeStep_hrs  = 6;1
 %----------------------- Lagrangian time step (h) ------------------------%
 LagrTimeStep.InHrs = 1;
 %------------------------------ Oil decay --------------------------------%
@@ -51,12 +51,12 @@ decay.surfNatrDispr         = 0;
 % Chemical dispersion
 decay.surfChemDispr         = 0;
 % Exponential degradation
-decay.expDegrade            = 1;
-decay.expDegrade_Percentage = 95;
+decay.expDegrade            = 0;
+decay.expDegrade_Percentage = 95; 
 decay.expDegrade_Days       = [1.5, 3.0, 4.5, 6.0, 7.5, 9.0, 10.5, 12.0];
 %----------------------- Get daily spill quantities ----------------------%
 % 'filename.csv' | '0'. Set csv_file == '0' if you DONOT have a csv file
-DS.csv_file = 'spill_data.csv';
+DS.csv_file = 'filename.csv';
 % Next DS block is required if you DONOT have a csv file (DS.csv_file = 0)
 % Indicate mean daily spill quantities (oil barrels)
 DS.Net                = 58668;
@@ -66,7 +66,7 @@ DS.SurfaceDispersants = 0;
 DS.SubsurfDispersants = 0;
 %-------------- Visualization (mapping particles positions) --------------%
 % 'on' | 'off'. Set 'on' for visualizing maps as the model runs
-vis_maps.visible         = 'on';
+vis_maps.visible         = 'off';
 vis_maps.visible_step_hr = nan; % nan
 % Bathymetry file name. 'BAT_FUS_GLOBAL_PIXEDIT_V4.mat' | 'gebco_1min_-98_18_-78_31.nc'
 vis_maps.bathymetry      = 'BATI100_s10_fixLC.mat';
@@ -124,7 +124,7 @@ vis_stat.figPosition     = [2,2,2*vis_stat.axesPosition(1)+vis_stat.axesPosition
 saving.Data_on                   = 0;
 saving.Data_step_hr              = 24;
 % maps_videos
-saving.MapsVideo_on              = 1;
+saving.MapsVideo_on              = 0;
 saving.MapsVideo_quality         = 100; % 0 (worst) --> 100 (best)
 saving.MapsVideo_framesPerSecond = 3;
 saving.MapsVideo_step_hr         = 24;
@@ -145,6 +145,6 @@ saving.StatImage_step_hr         = 24;
 run(Params.LocalPaths);
 %-------------------------- Call model routine ---------------------------%
 tic
-oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+oilSpillModel(spillTiming,spillLocation,Params,WindFile,...
   LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
 toc

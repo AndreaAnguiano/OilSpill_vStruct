@@ -1,5 +1,5 @@
 %----------------------------- OilSpillModel -----------------------------%
-function oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+function oilSpillModel(spillTiming,spillLocation,Params,WindFile,...
   LagrTimeStep,decay,DS,vis_maps,vis_stat,saving)
 %------------------------- Create output folders -------------------------%
 outputFolder = mkOutputDir(Params,saving);

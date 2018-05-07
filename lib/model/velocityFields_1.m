@@ -205,14 +205,6 @@ if surface_simulation
       [WindFile.Lat_min,WindFile.Lon_min],[WindFile.Lat_numel,WindFile.Lon_numel]);
     WindFile.V_T2 = ncread(readWindFileT2,WindFile.Vname,...
       [WindFile.Lat_min,WindFile.Lon_min],[WindFile.Lat_numel,WindFile.Lon_numel]);
-    % Interp wind grid to ocean grid
-    WindFile.U_T1   = interp2(WindFile.Lon,WindFile.Lat,WindFile.U_T1,OceanFile.Lon,OceanFile.Lat);
-    WindFile.V_T1   = interp2(WindFile.Lon,WindFile.Lat,WindFile.V_T1,OceanFile.Lon,OceanFile.Lat);
-    WindFile.U_T2   = interp2(WindFile.Lon,WindFile.Lat,WindFile.U_T2,OceanFile.Lon,OceanFile.Lat);
-    WindFile.V_T2   = interp2(WindFile.Lon,WindFile.Lat,WindFile.V_T2,OceanFile.Lon,OceanFile.Lat);
-    % Rotate wind grid
-    [WindFile.U_T1, WindFile.V_T1] = rotangle(WindFile.U_T1, WindFile.V_T1);
-    [WindFile.U_T2, WindFile.V_T2] = rotangle(WindFile.U_T2, WindFile.V_T2);
   else
     % Rename and read wind VectorFields from the next file
     flag_one = floor((ts-2)*LagrTimeStep.BTW_windsTS);
@@ -230,27 +222,12 @@ if surface_simulation
         [WindFile.Lat_min,WindFile.Lon_min],[WindFile.Lat_numel,WindFile.Lon_numel]);
       WindFile.V_T2 = ncread(readWindFileT2,WindFile.Vname,...
         [WindFile.Lat_min,WindFile.Lon_min],[WindFile.Lat_numel,WindFile.Lon_numel]);
-      % Interp wind grid T2 to ocean grid
-      WindFile.U_T2   = interp2(WindFile.Lon,WindFile.Lat,WindFile.U_T2,OceanFile.Lon,OceanFile.Lat);
-      WindFile.V_T2   = interp2(WindFile.Lon,WindFile.Lat,WindFile.V_T2,OceanFile.Lon,OceanFile.Lat);
-      % Rotate wind grid T2
-      [WindFile.U_T2, WindFile.V_T2] = rotangle(WindFile.U_T2, WindFile.V_T2);
     end
   end
 end
 %--------------Interp VectorFields (temporal interpolation)---------------%
 time_dif = (ts-1) * LagrTimeStep.InHrs;
-% Ocean
-% Velocities for current time-step
-ocean_U_factor = (OceanFile.U_T2 - OceanFile.U_T1) ./ OceanFile.timeStep_hrs;
-ocean_V_factor = (OceanFile.V_T2 - OceanFile.V_T1) ./ OceanFile.timeStep_hrs;
-velocities.Uts1 = OceanFile.U_T1 + time_dif .* ocean_U_factor;
-velocities.Vts1 = OceanFile.V_T1 + time_dif .* ocean_V_factor;
-% Velocities for next time-step
-TimeDiff_plus_TS = time_dif + LagrTimeStep.InHrs;
-velocities.Uts2 = OceanFile.U_T1 + TimeDiff_plus_TS .* ocean_U_factor;
-velocities.Vts2 = OceanFile.V_T1 + TimeDiff_plus_TS .* ocean_V_factor;
-if surface_simulation
+
   % Wind
   % Velocities for current time-step
   wind_U_factor = (WindFile.U_T2 - WindFile.U_T1) ./ WindFile.timeStep_hrs;
