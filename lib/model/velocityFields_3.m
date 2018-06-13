@@ -1,30 +1,47 @@
-function [velocities,WindFile,OceanFile] = velocityFields_1(...
+function [velocities,WindFile,OceanFile] = velocityFields_3(...
   first_time,SerialDay,ts,LagrTimeStep,spillLocation,OceanFile,WindFile,Params)
 date_time = datetime(SerialDay,'ConvertFrom','datenum');
 day_DoY = day(date_time,'dayofyear');
-year_str = datestr(date_time,'yyyy_');
+year_str = datestr(date_time,'yyyy');
+month_MoY = month(date_time, 'monthofyear');
 %--------------------------Get wind VectorFields--------------------------%
   if first_time
     % Wind file names and varible names
-    WindFile.Prefix       = 'WRF_';
-    WindFile.Sufix        = '.mat';
-    WindFile.Uname        = 'U_';
-    WindFile.Vname        = 'V_';
-    WindFile.Coord        = 'cordenadasHycom.mat' 
-    
+    WindFile.Prefix       = 'wrfout_c3h_d01_';
+    WindFile.Sufix        = strcat('_00_00_00_',yeart_str, '.nc');
+    WindFile.Uname        = 'U';
+    WindFile.Vname        = 'V';
+    WindFile.Wname        = 'W';
+    WindFile.CoorPrefix   = 'wrfout_c15d_d01_';
+    WindFile.HeigthName      = 'ZNU'
     % Define variables
-    coordFile = load(WindFile.Coord, '-mat')
-    lat_W = coordFile.Latitude;
-    lon_W = coordFile.Longitude;
-    WindFile.Lat_min = find(lat_W <= Params.domainLimits(3),1,'last');
-    WindFile.Lat_max = find(lat_W >= Params.domainLimits(4),1,'first');
-    WindFile.Lon_min = find(lon_W <= Params.domainLimits(1),1,'last');
-    WindFile.Lon_max = find(lon_W >= Params.domainLimits(2),1,'first');
-    lat_W = lat_W(WindFile.Lat_min:WindFile.Lat_max);
-    lon_W = lon_W(WindFile.Lon_min:WindFile.Lon_max);
-    WindFile.Lat_numel = numel(lat_W);
-    WindFile.Lon_numel = numel(lon_W);
-    [WindFile.Lon,WindFile.Lat] = meshgrid(lon_W,lat_W);
+    firstFileName = [WindFile.Prefix,year_str,'-',num2str(month_MoY, '%02d'),'-',num2str(day_DoM,'%02d'),WindFileSufix];
+    coordFileName = [WindFile.CoordPrefix,year_str,'-',num2str(month_MoY, '%02d'),'-',num2str(day_DoM,'%02d'),WindFileSufix];
+    Ulat_W = double(ncread(coordFileName, 'XLAT_U'));
+    Vlat_W = double(ncread(coordFileName, 'XLAT_V'));
+    Ulon_W =double(ncread(coordFileName, 'XLONG_U'));
+    Vlon_W = double(ncread(coordFileName, 'XLONG_V'));
+    WindFile.ULat_min = find(lat_W <= Params.domainLimits(3),1,'last');
+    WindFile.VLat_min = find(lat_W <= Params.domainLimits(3),1,'last');
+    WindFile.ULat_max = find(lat_W >= Params.domainLimits(4),1,'first');
+    WindFile.VLat_max = find(lat_W >= Params.domainLimits(4),1,'first');
+    WindFile.ULon_min = find(lat_W <= Params.domainLimits(3),1,'last');
+    WindFile.VLon_min = find(lat_W <= Params.domainLimits(3),1,'last');
+    WindFile.ULon_max = find(lat_W >= Params.domainLimits(4),1,'first');
+    WindFile.VLon_max = find(lat_W >= Params.domainLimits(4),1,'first');
+    Ulat_W = Ulat_W(WindFile.ULat_min:WindFile.ULat_max);
+    Ulon_W = Ulon_W(WindFile.ULon_min:WindFile.ULon_max);
+    Vlat_W = Vlat_W(WindFile.VLat_min:WindFile.VLat_max);
+    Vlon_W = Vlon_W(WindFile.VLon_min:WindFile.VLon_max);
+
+    WindFile.ULat_numel = numel(Ulat_W);
+    WindFile.ULon_numel = numel(Ulon_W);
+    
+    WindFile.VLat_numel = numel(Vlat_W);
+    WindFile.VLon_numel = numel(Vlon_W);
+    
+    [WindFile.ULon,WindFile.ULat] = meshgrid(Ulon_W,Ulat_W);
+    [WindFile.VLon,WindFile.VLat] = meshgrid(Vlon_W,Vlat_W);
     
     % Read wind VectorFields from the current and next file
     readWindFileT1 = [WindFile.Prefix,year_str,num2str(day_DoY),'_1',WindFile.Sufix];
@@ -41,6 +58,7 @@ year_str = datestr(date_time,'yyyy_');
     % Rename and read wind VectorFields from the next file
     flag_one = floor((ts-2)*LagrTimeStep.BTW_windsTS);
     flag_two = floor((ts-1)*LagrTimeStep.BTW_windsTS);
+    
     if flag_one ~= flag_two
       aux_num = floor(2 + (ts-1) * LagrTimeStep.BTW_windsTS);
       if aux_num == 5
@@ -58,7 +76,7 @@ year_str = datestr(date_time,'yyyy_');
   end
 end
 %--------------Interp VectorFields (temporal interpolation)---------------%
-time_dif = (ts-1) * LagrTimeStep.InHrs;
+  time_dif = (ts-1) * LagrTimeStep.InHrs;
 
   % Wind
   % Velocities for current time-step

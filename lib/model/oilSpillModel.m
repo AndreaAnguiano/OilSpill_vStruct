@@ -1,6 +1,6 @@
 %----------------------------- OilSpillModel -----------------------------%
 function oilSpillModel(spillTiming,spillLocation,Params,WindFile,...
-  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving)
+  LagrTimeStep,vis_maps,vis_stat,saving)
 %------------------------- Create output folders -------------------------%
 outputFolder = mkOutputDir(Params,saving);
 %-------------------- Verify the Lagrangian Time Step --------------------%
@@ -27,7 +27,7 @@ spillTiming.endSimDay_serial    = datenum(spillTiming.endSimDay_date);
 spillTiming.simulationDays      = 1 + spillTiming.endSimDay_serial - spillTiming.startDay_serial;
 spillTiming.spillDays           = 1 + spillTiming.lastSpillDay_serial - spillTiming.startDay_serial;
 %---------------------------- Spill location -----------------------------%
-spillLocation.n_Depths      = numel(spillLocation.Depths);
+spillLocation.n_Heights      = numel(spillLocation.Depths);
 spillLocation.Radius_degLat = mtr2deg(spillLocation.Radius_m, spillLocation.Lat, 'lat_deg', Dcomp);
 spillLocation.Radius_degLon = mtr2deg(spillLocation.Radius_m, spillLocation.Lat, 'lon_deg', Dcomp);
 %------------------------- Lagrangian time step --------------------------%
@@ -148,6 +148,9 @@ for SerialDay = spillTiming.startDay_serial:spillTiming.endSimDay_serial
     elseif Params.velocityFieldsType == 2
       [velocities,WindFile,OceanFile] = velocityFields_2(...
         first_time,SerialDay,ts,LagrTimeStep,spillLocation,OceanFile,WindFile,Params);
+    elseif Params.velocityFieldsType == 3
+      [velocities,WindFile,OceanFile] = velocityFields_3(...
+        first_time,SerialDay,ts,LagrTimeStep,spillLocation,OceanFile,WindFile,Params);
     else
       error('Unknown velocity fields type')
     end
@@ -158,6 +161,7 @@ for SerialDay = spillTiming.startDay_serial:spillTiming.endSimDay_serial
     elseif Params.RungeKutta == 2
       Particles = movePartsRK2(OceanFile,velocities,Particles,Params,...
         spillLocation,LagrTimeStep,Dcomp,ts);
+    
     else
       error('Unknown Runge-Kutta method')
     end
