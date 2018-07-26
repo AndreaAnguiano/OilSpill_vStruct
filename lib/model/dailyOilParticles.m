@@ -1,25 +1,30 @@
 function DailySpill = dailyOilParticles(particlesPerBarrel,DS,spillTiming)
+% This function obtains the number of particles that need to be created,
+% burned, discharged, etc. for every day. It can do it from a file or
+% from the initial configuration
+
+% Ask if we obtain the date from a file or not
 if strcmp(DS.csv_file,'0')
-  serial_dates       = (datenum(spillTiming.startDay_date):datenum(spillTiming.endSimDay_date))';
-  simulationDays     = numel(serial_dates);
-  spillDays          = numel(datenum(spillTiming.startDay_date):datenum(spillTiming.lastSpillDay_date));
-  RITT_TopHat        = 0;
-  Discharge          = [zeros(spillDays,1) + DS.Net; zeros(simulationDays-spillDays,1)];
-  Burned             = zeros(simulationDays,1) + DS.Burned;
-  OilyWater          = zeros(simulationDays,1) + DS.OilyWater;
-  SubsurfDispersants = zeros(simulationDays,1) + DS.SubsurfDispersants;
-  SurfaceDispersants = zeros(simulationDays,1) + DS.SurfaceDispersants;
+    serial_dates       = (datenum(spillTiming.startDay_date):datenum(spillTiming.endSimDay_date))';
+    simulationDays     = numel(serial_dates);
+    spillDays          = numel(datenum(spillTiming.startDay_date):datenum(spillTiming.lastSpillDay_date));
+    RITT_TopHat        = 0;
+    Discharge          = [zeros(spillDays,1) + DS.Net; zeros(simulationDays-spillDays,1)];
+    Burned             = zeros(simulationDays,1) + DS.Burned;
+    OilyWater          = zeros(simulationDays,1) + DS.OilyWater;
+    SubsurfDispersants = zeros(simulationDays,1) + DS.SubsurfDispersants;
+    SurfaceDispersants = zeros(simulationDays,1) + DS.SurfaceDispersants;
 else
-  spill_data         = importdata(DS.csv_file);
-  YearMonthDay       = spill_data.data(:,[3,1,2]);
-  serial_dates       = datenum(YearMonthDay);
-  Discharge          = spill_data.data(:,4);
-  InlandRecovery     = spill_data.data(:,5);
-  Burned             = spill_data.data(:,6);
-  RITT_TopHat        = spill_data.data(:,7);
-  OilyWater          = spill_data.data(:,8);
-  SubsurfDispersants = spill_data.data(:,9);
-  SurfaceDispersants = spill_data.data(:,10);
+    spill_data         = importdata(DS.csv_file);
+    YearMonthDay       = spill_data.data(:,[3,1,2]);
+    serial_dates       = datenum(YearMonthDay);
+    Discharge          = spill_data.data(:,4);
+    InlandRecovery     = spill_data.data(:,5);
+    Burned             = spill_data.data(:,6);
+    RITT_TopHat        = spill_data.data(:,7);
+    OilyWater          = spill_data.data(:,8);
+    SubsurfDispersants = spill_data.data(:,9);
+    SurfaceDispersants = spill_data.data(:,10);
 end
 DailySpill.csv_file = DS.csv_file;
 

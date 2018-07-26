@@ -2,39 +2,32 @@
 % Lagrangian algorithm to simulate oil spills in the Gulf of Mexico
 close all; clear; clc; format compact; clc
 %----------------------- Spill timing (yyyy,mm,dd) -----------------------%
-spillTiming.startDay_date     = [2010,04,22]; % [2010,04,22]
-%spillTiming.lastSpillDay_date = [2010,07,14]; % [2010,07,14]
-spillTiming.lastSpillDay_date = [2010,04,24]; % [2010,07,14]
-%spillTiming.endSimDay_date    = [2010,07,30]; % [2010,07,30]
-spillTiming.endSimDay_date    = [2010,04,24]; % [2010,07,30]
 %---------------------------- Spill location -----------------------------%
 spillLocation.Lat      =  28.738; %  28.738
 spillLocation.Lon      = -88.366; % -88.366
-spillLocation.Depths   = [1100, 400,    0];
+
 spillLocation.Radius_m = [ 250, 500, 1000]; % 2 STD for random initialization of particles
 %------------------------- Local Paths filename --------------------------%
-Params.LocalPaths = 'local_paths_BP_50p1.m';
-%--------------------------- Output directorie ---------------------------%
-Params.OutputDir = '/home/olmozavala/Desktop/PETROLEO_Julio/OUTPUT/Results_BP_50p1/';
+Params.LocalPaths = 'local_paths_BP_50p1.m'; %--------------------------- Output directorie ---------------------------%
+Params.OutputDir = '/home/olmozavala/Desktop/PETROLEO_Julio/OUTPUT/TimingTests/';
 %----------------------- Runge-Kutta method: 2 | 4 -----------------------%
-Params.RungeKutta = 4;
+Params.RungeKutta = 2;
 %------------- Velocity Fields Type: 1 (BP) | 2 (Usumacinta) -------------%
 Params.velocityFieldsType = 1;
 %----------------------------- Model domain ------------------------------%
 Params.domainLimits = [-92, -80, 25, 31]; % [-88.6, -88.2, 28.71, 28.765]
-%------------- Number of particles representing one barrel ---------------%
-Params.particlesPerBarrel  = 1/10;
+%Params.domainLimits = [-94, -78, 23, 33];
+
 %--------------- Turbulent-diffusion parameter per depth -----------------%
-Params.TurbDiff_b          = [0.2, 0.8, 1.0];
+Params.TurbDiff_b          = [.05, .05, .05];
 %------ Wind fraction used to advect particles (only for 0 m depth) ------%
 Params.windcontrib         = 0.035;
 %--------- Distribution of oil per subsurface depth (> 0 m depth)---------%
-Params.subsurfaceFractions = [2/3, 1/3];
+Params.subsurfaceFractions = [1/2, 1/2];
 %------------Oil components (component proportions per depth) ------------%
-Params.components_proportions = [...
-  [0.05 0.05 0.05 0.05 0.10 0.20 0.20 0.30];
-  [0.05 0.05 0.10 0.10 0.10 0.20 0.20 0.20];
-  [0.05 0.20 0.30 0.20 0.10 0.05 0.05 0.05]];
+Params.components_proportions = [[0.05 0.20 0.30 0.20 0.10 0.05 0.05 0.05]; ...
+                                  [0.05 0.20 0.30 0.20 0.10 0.05 0.05 0.05]; ...
+                                [0.05 0.20 0.30 0.20 0.10 0.05 0.05 0.05]];
 %--------------- Ocean and Wind files (time step in hours) ---------------%
 OceanFile.timeStep_hrs = 24;
 WindFile.timeStep_hrs  = 6;
@@ -42,12 +35,12 @@ WindFile.timeStep_hrs  = 6;
 LagrTimeStep.InHrs = 1;
 %------------------------------ Oil decay --------------------------------%
 % Burning
-decay.burn                  = 0;
+decay.burn                  = 1;
 decay.burn_radius_m         = 300000;
 % Collection
-decay.collect               = 0;
+decay.collect               = 1;
 % Evaporation
-decay.evaporate             = 0;
+decay.evaporate             = 1;
 % Natural dispersion
 decay.surfNatrDispr         = 0;
 % Chemical dispersion
@@ -55,21 +48,14 @@ decay.surfChemDispr         = 0;
 % Exponential degradation
 decay.expDegrade            = 1;
 decay.expDegrade_Percentage = 95;
-decay.expDegrade_Days       = [1.5, 3.0, 4.5, 6.0, 7.5, 9.0, 10.5, 12.0];
+decay.expDegrade_Days       = [3, 6, 9, 12, 15, 18, 21, 24];
 %----------------------- Get daily spill quantities ----------------------%
 % 'filename.csv' | '0'. Set csv_file == '0' if you DONOT have a csv file
 DS.csv_file = 'spill_data.csv';
-% Next DS block is required if you DONOT have a csv file (DS.csv_file = 0)
-% Indicate mean daily spill quantities (oil barrels)
-DS.Net                = 58668;
-DS.Burned             = 2655;
-DS.OilyWater          = 7713;
-DS.SurfaceDispersants = 0;
-DS.SubsurfDispersants = 0;
 %-------------- Visualization (mapping particles positions) --------------%
 % 'on' | 'off'. Set 'on' for visualizing maps as the model runs
 vis_maps.visible         = 'on';
-vis_maps.visible_step_hr = nan; % nan 
+vis_maps.visible_step_hr = nan; % nan
 % Bathymetry file name. 'BAT_FUS_GLOBAL_PIXEDIT_V4.mat' | 'gebco_1min_-98_18_-78_31.nc'
 vis_maps.bathymetry      = 'BATI100_s10_fixLC.mat';
 % Visualization Type (2D and/or 3D)
@@ -102,7 +88,7 @@ vis_maps.colors_ByComponent   = {...
   [0.4940    0.1840    0.5560]};   % purple
 %------------------ Visualization (plotting statistics) ------------------%
 % 'on' | 'off'. Set 'on' for visualizing statistics as the model runs
-vis_stat.visible         = 'off'; % 'on' | 'off'
+vis_stat.visible         = 'on'; % 'on' | 'off'
 vis_stat.visible_step_hr = nan;
 vis_stat.axesLimits      = 'auto'; % 'auto' | [xmin xmax ymin ymax]
 vis_stat.fontSize        = 16;
@@ -124,12 +110,12 @@ vis_stat.figPosition     = [2,2,2*vis_stat.axesPosition(1)+vis_stat.axesPosition
 %---------------------------- Saving options -----------------------------%
 % Data
 saving.Data_on                   = 0;
-saving.Data_step_hr              = 1;
+saving.Data_step_hr              = 24;
 % maps_videos
-saving.MapsVideo_on              = 1;
+saving.MapsVideo_on              = 0;
 saving.MapsVideo_quality         = 100; % 0 (worst) --> 100 (best)
 saving.MapsVideo_framesPerSecond = 3;
-saving.MapsVideo_step_hr         = 1;
+saving.MapsVideo_step_hr         = 24;
 % maps_images
 saving.MapsImage_on              = 0;
 saving.MapsImage_quality         = '-r100'; % Resolution in dpi
@@ -145,8 +131,85 @@ saving.StatImage_quality         = '-r100'; % Resolution in dpi
 saving.StatImage_step_hr         = 24;
 %---------------------------- Add local paths ----------------------------%
 run(Params.LocalPaths);
+
+spillTiming.startDay_date     = [2010,04,22]; % [2010,04,22]
 %-------------------------- Call model routine ---------------------------%
-tic
-oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
-  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
-toc
+
+% spillLocation.Depths   = [1000 100 0];
+% spillTiming.lastSpillDay_date = [2010,04,29]; % [2010,07,14]
+% spillTiming.endSimDay_date    = [2010,04,29]; % [2010,07,30]
+% for particlesPerBarrel = [1:10] 
+%     tic()
+%     Params.particlesPerBarrel  = particlesPerBarrel
+%     oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%       LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%     tres(particlesPerBarrel) = toc()
+% end
+
+spillLocation.Depths   = [1000 100 0];
+
+Params.particlesPerBarrel  = 1
+for daysToRun = [2:2:20]
+    temp = datetime(2010,04,22)+daysToRun
+    spillTiming.lastSpillDay_date = [temp.Year, temp.Month, temp.Day]; % [2010,07,14]
+    spillTiming.endSimDay_date    = [temp.Year, temp.Month, temp.Day]; % [2010,07,30]
+    tic()
+    oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+      LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+    tres(daysToRun/2) = toc()
+end
+
+%tic()
+%Params.particlesPerBarrel  = 1/50;
+%spillLocation.Depths   = [1000 100 0];
+%spillTiming.lastSpillDay_date = [2010,04,24]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,24]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(1) = toc()
+%
+%tic()
+%Params.particlesPerBarrel  = 1/50;
+%spillLocation.Depths   = [1001 99 0];
+%spillTiming.lastSpillDay_date = [2010,04,24]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,24]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(2) = toc()
+%
+%tic()
+%Params.particlesPerBarrel  = 1/50;
+%spillLocation.Depths   = [1000 100 0];
+%spillTiming.lastSpillDay_date = [2010,04,26]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,26]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(3) = toc()
+%
+%tic()
+%Params.particlesPerBarrel  = 1/50;
+%spillLocation.Depths   = [1001 99 0];
+%spillTiming.lastSpillDay_date = [2010,04,26]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,26]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(4) = toc()
+%
+%tic()
+%Params.particlesPerBarrel  = 1/10;
+%spillLocation.Depths   = [1000 100 0];
+%spillTiming.lastSpillDay_date = [2010,04,29]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,29]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(5) = toc()
+%
+%
+%tic()
+%Params.particlesPerBarrel  = 1/10;
+%spillLocation.Depths   = [1001 99 0];
+%spillTiming.lastSpillDay_date = [2010,04,29]; % [2010,07,14]
+%spillTiming.endSimDay_date    = [2010,04,29]; % [2010,07,30]
+%oilSpillModel(spillTiming,spillLocation,Params,OceanFile,WindFile,...
+%  LagrTimeStep,decay,DS,vis_maps,vis_stat,saving);
+%tres(6) = toc()

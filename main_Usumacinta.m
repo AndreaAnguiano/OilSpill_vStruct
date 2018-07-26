@@ -13,7 +13,7 @@ spillLocation.Radius_m = [ 100, 200, 300]; % 2 STD for random initialization of 
 %------------------------- Local Paths filename --------------------------%
 Params.LocalPaths = 'local_paths_Usumacinta.m';
 %--------------------------- Output directorie ---------------------------%
-Params.OutputDir = '/DATA/corridasjulio/OilSpill_vStruct/ResultsRK4_Usu_20p1/';
+Params.OutputDir = '/home/olmozavala/Desktop/PETROLEO_Julio/OilSpill_vStruct/ResultsRK4_Usu_20p1/';
 %----------------------- Runge-Kutta method: 2 | 4 -----------------------%
 Params.RungeKutta = 4;
 %------------- Velocity Fields Type: 1 (BP) | 2 (Usumacinta) -------------%
